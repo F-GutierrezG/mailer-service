@@ -1,6 +1,6 @@
 import sendgrid
 import os
-from sendgrid.helpers.mail import *
+from sendgrid.helpers.mail import Personalization, Email, Content, Mail
 
 
 class MailLogics:
@@ -11,7 +11,8 @@ class MailLogics:
         self.__add_cc(data, to_list)
         self.__add_bcc(data, to_list)
 
-        sg = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY'))
+        sg = sendgrid.SendGridAPIClient(
+            apikey=os.environ.get('SENDGRID_API_KEY'))
         from_email = Email(data['from'])
 
         subject = data['subject']
@@ -23,7 +24,7 @@ class MailLogics:
             mail.reply_to = Email("csilva@gusisoft.cl")
 
         mail.add_personalization(to_list)
-        response = sg.client.mail.send.post(request_body=mail.get())
+        sg.client.mail.send.post(request_body=mail.get())
 
     def __add_to(self, data, list):
         if 'to' in data:
