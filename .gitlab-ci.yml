@@ -40,14 +40,14 @@ Mailer Service:
     - export MAIN_REPO="https://${GITLAB_USER}:${GITLAB_PASSWORD}@gitlab.com/gusisoft/OneLike/mailer-service.git"
     - export MAILER_REPO="${MAIN_REPO}#${CI_COMMIT_REF_NAME}"
   script:
-    - docker build $MAILER_REPO -t $USERS:$COMMIT -f Dockerfile-${CI_COMMIT_REF_NAME}
+    - docker build $MAILER_REPO -t $MAILER:$COMMIT -f Dockerfile-${CI_COMMIT_REF_NAME}
     - docker tag $MAILER:$COMMIT $REGISTRY_REPO/$MAILER:$TAG
     - docker push $REGISTRY_REPO/$MAILER:$TAG
   after_script:
     - docker image rm -f $(docker images registry.gitlab.com/gusisoft/onelike/mailer-service/mailer -q)
     - sudo git clean -ffdx
 
-Users Swagger:
+Mailer Swagger:
   stage: registry
   only:
     - stage
