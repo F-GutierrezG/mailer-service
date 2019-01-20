@@ -1,0 +1,46 @@
+version: '3.6'
+
+services:
+  mailer:
+    container_name: mailer
+    build:
+      context: ./
+      dockerfile: Dockerfile-dev
+    volumes:
+      - './src:/usr/src/app'
+    ports:
+      - 5006:5000
+    environment:
+      - FLASK_ENV=development
+      - FLASK_APP=manage.py
+      - APP_SETTINGS=project.config.DevelopmentConfig
+      - SENDGRID_API_KEY=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
+      - SECRET_KEY=secret_key
+    restart: always
+    networks:
+      - mailer-service-network
+      - users-service-network
+
+  mailes-swagger:
+    container_name: mailer-swagger
+    build:
+      context: ./swagger
+      dockerfile: Dockerfile
+    ports:
+      - 8086:8080
+    volumes:
+      - './swagger/definitions:/usr/share/nginx/html/definitions'
+    environment:
+      - API_URL=definitions/swagger.yml
+    restart: always
+    networks:
+      - mailer-service-network
+      - onelike-network
+
+networks:
+  mailer-service-network:
+    name: mailer-service-network
+  users-service-network:
+    name: users-service-network
+  onelike-network:
+    name: onelike-network

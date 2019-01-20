@@ -1,0 +1,84 @@
+openapi: "3.0.0"
+info:
+  title: Mailer Service
+  version: 1.0.0
+  description: Mailer Service API documentation
+servers:
+  - url: http://localhost:5006
+  - url: https://stage.onelike.gusisoft.cl
+tags:
+  - name: Service Health
+    description: Service Health Status
+paths:
+  /mailer-service/health:
+    get:
+      tags:
+        - Service Health
+      summary: Service health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+components:
+  schemas:
+    Health:
+      properties:
+        message:
+          type: string
+          description: Health status
+  requestBodies:
+    UserBase:
+      properties:
+        first_name:
+          type: string
+          description: User first name
+        last_name:
+          type: string
+          description: User last name
+        email:
+          type: string
+          description: User email
+        expiration:
+          type: string
+          format: date-time
+          description: Expiration datetime
+    GroupBase:
+      properties:
+        name:
+          type: string
+          description: Group name
+    Id:
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Element Id
+    PermissionCode:
+      properties:
+        code:
+          type: string
+          description: Permission Code
+  responses:
+    BadRequest:
+      properties:
+        message:
+          type: string
+          description: Error cause
+    Unauthorized:
+      properties:
+        message:
+          type: string
+          description: Error cause
+    Forbidden:
+      properties:
+        message:
+          type: string
+          description: Error cause
+    NotFound:
+      properties:
+        message:
+          type: string
+          description: Error cause
