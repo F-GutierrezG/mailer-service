@@ -19,7 +19,6 @@ services:
     restart: always
     networks:
       - mailer-service-network
-      - users-service-network
 
   mailes-swagger:
     container_name: mailer-swagger
@@ -40,7 +39,5 @@ services:
 networks:
   mailer-service-network:
     name: mailer-service-network
-  users-service-network:
-    name: users-service-network
   onelike-network:
     name: onelike-network
