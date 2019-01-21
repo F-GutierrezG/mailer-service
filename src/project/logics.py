@@ -27,16 +27,16 @@ class MailLogics:
         sg.client.mail.send.post(request_body=mail.get())
 
     def __add_to(self, data, list):
-        if 'to' in data:
+        if 'to' in data and data['to']:
             for mail in data['to']:
                 list.add_to(Email(mail))
 
     def __add_cc(self, data, list):
-        if 'cc' in data:
+        if 'cc' in data and data['cc']:
             for mail in data['cc']:
                 list.add_cc(Email(mail))
 
     def __add_bcc(self, data, list):
-        if 'bcc' in data:
+        if 'bcc' in data and data['bcc']:
             for mail in data['bcc']:
                 list.add_bcc(Email(mail))
