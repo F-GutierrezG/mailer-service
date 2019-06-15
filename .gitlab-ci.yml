@@ -1,7 +1,8 @@
-image: alpine
+image: docker
+services:
+  - docker:dind
 
 variables:
-  COMMIT: ${CI_COMMIT_SHA}
   REGISTRY_REPO: registry.gitlab.com/gusisoft/onelike/mailer-service
   MAILER: mailer
   SWAGGER: mailer-swagger
@@ -16,16 +17,14 @@ Testing:
   only:
     - devel
   before_script:
-    - sudo git clean -ffdx
+    - apk add --no-cache py-pip python-dev libffi-dev openssl-dev gcc libc-dev make
+    - pip install docker-compose
   script:
     - docker-compose -f docker-compose-dev.yml up -d --build
     - docker-compose -f docker-compose-dev.yml run mailer flake8 project
     - docker-compose -f docker-compose-dev.yml run mailer python manage.py cov
   after_script:
     - docker-compose -f docker-compose-dev.yml down
-    - docker image rm -f mailer-service_mailer
-    - docker image rm -f mailer-service_mailer-swagger
-    - sudo git clean -ffdx
 
 Mailer Service:
   stage: registry
@@ -33,19 +32,18 @@ Mailer Service:
     - stage
     - master
   before_script:
-    - sudo git clean -ffdx
+    - apk add --no-cache git
     - export COMMIT_TIME=$(git show -s --format=%ct $CI_COMMIT_SHA)
     - export TAG=${CI_COMMIT_REF_NAME}_$COMMIT_TIME
     - docker login -u gitlab-ci-token -p $DOCKER_TOKEN registry.gitlab.com
     - export MAIN_REPO="https://${GITLAB_USER}:${GITLAB_PASSWORD}@gitlab.com/gusisoft/OneLike/mailer-service.git"
     - export MAILER_REPO="${MAIN_REPO}#${CI_COMMIT_REF_NAME}"
   script:
-    - docker build $MAILER_REPO -t $MAILER:$COMMIT -f Dockerfile-${CI_COMMIT_REF_NAME}
-    - docker tag $MAILER:$COMMIT $REGISTRY_REPO/$MAILER:$TAG
+    - docker build $MAILER_REPO -t $MAILER:$CI_COMMIT_SHA -f Dockerfile-${CI_COMMIT_REF_NAME}
+    - docker tag $MAILER:$CI_COMMIT_SHA $REGISTRY_REPO/$MAILER:$TAG
     - docker push $REGISTRY_REPO/$MAILER:$TAG
   after_script:
     - docker image rm -f $(docker images registry.gitlab.com/gusisoft/onelike/mailer-service/mailer -q)
-    - sudo git clean -ffdx
 
 Mailer Swagger:
   stage: registry
@@ -53,28 +51,25 @@ Mailer Swagger:
     - stage
     - master
   before_script:
-    - sudo git clean -ffdx
+    - apk add --no-cache git
     - export COMMIT_TIME=$(git show -s --format=%ct $CI_COMMIT_SHA)
     - export TAG=${CI_COMMIT_REF_NAME}_$COMMIT_TIME
     - docker login -u gitlab-ci-token -p $DOCKER_TOKEN registry.gitlab.com
     - export MAIN_REPO="https://${GITLAB_USER}:${GITLAB_PASSWORD}@gitlab.com/gusisoft/OneLike/mailer-service.git"
     - export SWAGGER_REPO="${MAIN_REPO}#${CI_COMMIT_REF_NAME}:swagger"
   script:
-    - docker build $SWAGGER_REPO -t $SWAGGER:$COMMIT -f Dockerfile
-    - docker tag $SWAGGER:$COMMIT $REGISTRY_REPO/$SWAGGER:$TAG
+    - docker build $SWAGGER_REPO -t $SWAGGER:$CI_COMMIT_SHA -f Dockerfile
+    - docker tag $SWAGGER:$CI_COMMIT_SHA $REGISTRY_REPO/$SWAGGER:$TAG
     - docker push $REGISTRY_REPO/$SWAGGER:$TAG
   after_script:
     - docker image rm -f $(docker images registry.gitlab.com/gusisoft/onelike/mailer-service/mailer-swagger -q)
-    - sudo git clean -ffdx
 
 Deploy Stage:
   stage: deploy
-  environment:
-    name: stage
-    url: http://stage.onelike.gusisoft.cl
   only:
     - stage
   before_script:
+    - apk add --no-cache openssh-client git
     - export COMMIT_TIME=$(git show -s --format=%ct $CI_COMMIT_SHA)
     - export TAG=${CI_COMMIT_REF_NAME}_$COMMIT_TIME
     - rm -rf ~/.ssh
@@ -83,16 +78,14 @@ Deploy Stage:
     - chmod 600 ~/.ssh/id_rsa
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
   script:
-    - bash ./${CI_COMMIT_REF_NAME}-deploy.sh
+    - sh ./${CI_COMMIT_REF_NAME}-deploy.sh
 
 Deploy Production:
   stage: deploy
-  environment:
-    name: production
-    url: http://onelike.gusisoft.cl
   only:
     - master
   before_script:
+    - apk add --no-cache openssh-client git
     - export COMMIT_TIME=$(git show -s --format=%ct $CI_COMMIT_SHA)
     - export TAG=${CI_COMMIT_REF_NAME}_$COMMIT_TIME
     - rm -rf ~/.ssh
@@ -101,4 +94,4 @@ Deploy Production:
     - chmod 600 ~/.ssh/id_rsa
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
   script:
-    - bash ./${CI_COMMIT_REF_NAME}-deploy.sh
+    - sh ./${CI_COMMIT_REF_NAME}-deploy.sh
